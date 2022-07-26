@@ -1,5 +1,4 @@
 import time
-from appscript import k
 import torch
 import tqdm
 from tools import *
@@ -10,7 +9,7 @@ def train(epoch, model, train_dataloader, hparams, logger, optim, scheduler):
     device = hparams['device']
     fbankaug = hparams['fbankaug']
 
-    scheduler.step(epoch)
+    
     index, top1, loss = 0, 0, 0
     lr = optim.param_groups[0]['lr']
     logger.info("start Traing Epoch %d"%(epoch+1))
@@ -30,7 +29,8 @@ def train(epoch, model, train_dataloader, hparams, logger, optim, scheduler):
         logger.info(time.strftime("%m-%d %H:%M:%S") + \
 			" [%2d] Lr: %5f, Training: %.2f%%, "    %(epoch, lr, 100 * ((num+1) / train_dataloader.__len__())) + \
 			" Loss: %.5f, ACC: %2.2f%% \r"        %(loss/(num+1), top1/index*len(label)))
-    
+    scheduler.step(epoch)
+
     return loss/(index+1), lr , top1/(index+1)*len(label)
 
 def validation(model, test_dataloader, hparams, logger):

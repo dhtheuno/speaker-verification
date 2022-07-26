@@ -55,7 +55,8 @@ class AugmentWAV(object):
                 self.noiselist[file.split('/')[-3]] = []
             self.noiselist[file.split('/')[-3]].append(file)
 
-        self.rir_files  = glob.glob(os.path.join(rir_path,'*/*.wav'));
+        self.rir_files  = glob.glob(os.path.join(rir_path,'*/*/*.wav'))
+        #print(self.rir_files)
 
     def additive_noise(self, noisecat, audio):
 
@@ -130,7 +131,7 @@ class load_trainset(Dataset):
             elif augtype == 4:
                 audio   = self.augment_wav.additive_noise('noise',audio)
         
-        return torch.FloatTensor(audio[0]), label
+        return torch.FloatTensor(audio[0]), int(label)
     def __len__(self):
         return len(self.audio_list)
 
@@ -140,7 +141,7 @@ class load_testset(Dataset):
         self.test_files = hparams['test_file']
         self.eval_frames = hparams['eval_frames']
 
-        lines = open(self.test_files).readlines
+        lines = open(self.test_files).readlines()
         
         self.audio_1_list = list()
         self.audio_2_list = list()

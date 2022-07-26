@@ -1,6 +1,6 @@
 import os
 import time
-import tqdm
+from tqdm import tqdm
 import argparse
 import torch
 import shutil
@@ -53,16 +53,17 @@ def main():
 
     logger.info('loading test_dataset')
     test_dataset = load_testset(config['dataset_options'])
+    '''
     test_dataloader = DataLoader(
         test_dataset,
         batch_size=batch_size,
         shuffle = False,
         num_workers = num_workers
     )
-    
+    '''
     lr = config['lr']
     lr_decay = config['lr_decay']
-    weight_decay = config['weight_decay']
+    weight_decay = float(config['weight_decay'])
     
     num_epoch = config['num_epoch']
     eval_interval = config['eval_interval']
@@ -73,7 +74,8 @@ def main():
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=eval_interval, gamma=lr_decay)
     
     EERs = []
-
+    if config['device'] == 'cuda':
+        model = model.cuda()
     for epoch in tqdm(range(num_epoch)):
         loss, lr, acc = train(epoch, model, train_dataloader, config, logger, optimizer, scheduler)
         if (epoch+1)%eval_interval == 0:
@@ -82,7 +84,7 @@ def main():
             logger.info("save model in %s"%(output_path))
             
             logger.info("start validation")
-            EER, minDCF = validation(model, test_dataloader, config, logger)
+            EER, minDCF = validation(model, test_dataset, config, logger)
             EERs.append(EER)
             logger.info("%d epoch, LR %f, LOSS %f, ACC %2.2f%%, EER %2.2f%%, bestEER %2.2f%%"%(epoch, lr, loss, acc, EERs[-1], min(EERs)))        
 if __name__ == "__main__":
