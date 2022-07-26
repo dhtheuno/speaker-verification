@@ -1,6 +1,6 @@
 
 
-seed: 1986
+seed: 1234
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
 output_folder: !ref results/ecapa_tdnn/<seed>
 save_folder: !ref <output_folder>/save
@@ -27,8 +27,8 @@ s: 30
 device: cuda
 
 # Training parameters
-num_epoch: 10
-batch_size: 512
+num_epoch: 20
+batch_size: 704
 lr: 0.001
 lr_decay: 0.97
 weight_decay: 2e-5 
@@ -38,7 +38,7 @@ sample_rate: 16000
 sentence_len: 3.0 # seconds
 shuffle: True
 random_chunk: True
-eval_interval: 1
+eval_interval: 5
 fbankaug: True
 
 dataset_options:
@@ -55,7 +55,7 @@ dataset_options:
 dataloader_options:
     batch_size: !ref <batch_size>
     shuffle: !ref <shuffle>
-    num_workers: 6
+    num_workers: 8
 
 model_options:
     C: !ref <C>

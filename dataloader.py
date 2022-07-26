@@ -16,8 +16,10 @@ from torch.utils.data import Dataset
 def loadWAV(filename, max_frames, evalmode=True, num_eval=10):
     max_audio = max_frames * 160 + 240
     audio, sr = soundfile.read(filename)
+    '''
     if sr != 16000:
         audio = librosa.resample(audio, orig_sr=sr, target_sr= 16000)
+    '''
     audiosize = audio.shape[0]
 
     if audiosize <= max_audio:

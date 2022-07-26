@@ -4,12 +4,43 @@ import argparse
 import librosa
 import collections
 from tqdm import tqdm
+import soundfile
 import random
+import concurrent.futures
 
 from hyperpyyaml import load_hyperpyyaml
 
+def check_and_resample(path):
+    try:
+        audio, sr = soundfile.read(path)
+    except:
+        print("check")
+        return
+    else:
+        if sr != 16000:
+            audio = librosa.resample(audio, orig_sr=sr, target_sr= 16000)
+            librosa.output.write_wav(path, audio, sr=16000)
+            return path
+        else:
+            return path
 def get_wav_files(path):
     wav_files = glob.glob(os.path.join(path, '*/*/*/*.wav'))
+    #clean_wav_files = list()
+    '''
+    for i in tqdm(wav_files, total=len(wav_files)):
+        try:
+            audio, sr = soundfile.read(i)
+        except:
+            print("check")
+            continue
+        if sr != 16000:
+            audio = librosa.resample(audio, orig_sr=sr, target_sr= 16000)
+            librosa.output.write_wav(i, audio, sr=16000)
+        clean_wav_files.append(i)
+    '''
+    with concurrent.futures.ProcessPoolExecutor(10) as executor:
+        clean_wav_files = list(executor.map(check_and_resample, wav_files))
+    wav_files = list(filter(None,clean_wav_files))
     speaker_ids = [os.path.basename(wav_file).split("-")[1][0:4] for wav_file in wav_files]
     
     dictkeys = list(set(speaker_ids))
@@ -84,3 +115,4 @@ def main():
     print("DONE!!")
 if __name__ == "__main__":
         main()
+        #test = librosa.load("data/train/DB/continuous/2021-12-16/2988/D0123-2988M1021-0__000_0-05918066.wav")
