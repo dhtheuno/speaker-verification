@@ -9,9 +9,9 @@ from hyperpyyaml import load_hyperpyyaml
 from torch.utils.data import DataLoader
 
 from train import train, validation
-from dataloader import load_trainset, load_testset
+from dataloader import load_trainset, load_testset #, worker_init_fn
 from model.ECAPA_TDNN.ECAPATDNNmdoel import ECAPATDNNmodel
-
+from tqdm.contrib.logging import logging_redirect_tqdm
 from tools import *
 
 
@@ -27,7 +27,10 @@ def main():
     output_folder = config['output_folder']
     if not os.path.isdir(output_folder):
         os.makedirs(output_folder)
-    
+    save_folder = config['save_folder']
+    if not os.path.isdir(save_folder):
+        os.makedirs(save_folder)
+
     train_log = config['train_log']
     logger = init_logger(train_log)
 
@@ -43,11 +46,14 @@ def main():
     num_workers = config['dataloader_options']['num_workers']
     
     logger.info('loading train_dataset')
+    
+    
     train_dataset = load_trainset(config['dataset_options'])
     train_dataloader = DataLoader(
         train_dataset,
         batch_size = batch_size,
         shuffle = True,
+        #worker_init_fn = worker_init_fn,
         num_workers= num_workers
     )
 
@@ -76,16 +82,20 @@ def main():
     EERs = []
     if config['device'] == 'cuda':
         model = model.cuda()
-    for epoch in tqdm(range(num_epoch)):
-        loss, lr, acc = train(epoch, model, train_dataloader, config, logger, optimizer, scheduler)
-        if (epoch+1)%eval_interval == 0:
-            output_path = os.path.join(config['save_folder'],f"ECAPA_TDNN_{epoch}.pt")
-            model.save_parameters(output_path)
-            logger.info("save model in %s"%(output_path))
-            
-            logger.info("start validation")
-            EER, minDCF = validation(model, test_dataset, config, logger)
-            EERs.append(EER)
-            logger.info("%d epoch, LR %f, LOSS %f, ACC %2.2f%%, EER %2.2f%%, bestEER %2.2f%%"%(epoch, lr, loss, acc, EERs[-1], min(EERs)))        
+    with logging_redirect_tqdm():
+        for epoch in tqdm(range(num_epoch)):
+            loss, lr, acc = train(epoch, model, train_dataloader, config, logger, optimizer)
+            logger.info("[Epoch %2d Done]Lr: %5f, Loss: %.5f, ACC: %2.2f%% "%(epoch, lr, loss, acc))
+            if (epoch+1)%1==0:#eval_interval == 0:
+                output_path = os.path.join(config['save_folder'],f"ECAPA_TDNN_{epoch}.pt")
+                model.save_parameters(output_path)
+                logger.info("save model in %s"%(output_path))
+                logger.info("start validation")
+                EER, minDCF = validation(model, test_dataset, config, logger)
+                EERs.append(EER)
+                #loss = 0 
+                #acc = 0
+                logger.info("%d epoch, LR %f, LOSS %f, ACC %2.2f%%, EER %2.2f%%, bestEER %2.2f%%"%(epoch, lr, loss, acc, EERs[-1], min(EERs)))        
+            scheduler.step()
 if __name__ == "__main__":
     main()

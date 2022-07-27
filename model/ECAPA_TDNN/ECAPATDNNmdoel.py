@@ -25,10 +25,10 @@ class ECAPATDNNmodel(nn.Module):
 
     def eval_step(self, features_1, features_2):
         with torch.no_grad():
-            embedding_1 = self.speaker_encoder.forward(features_1)
+            embedding_1 = self.speaker_encoder.forward(features_1, aug=False)
             embedding_1 = F.normalize(embedding_1, p=2, dim=1)
             
-            embedding_2 = self.speaker_encoder(features_2)
+            embedding_2 = self.speaker_encoder(features_2, aug=False)
             embedding_2 = F.normalize(embedding_2, p=2, dim=1)
 
         return embedding_1, embedding_2

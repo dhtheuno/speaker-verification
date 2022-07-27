@@ -9,9 +9,18 @@ import random
 import soundfile
 import librosa
 from scipy import signal
+import numpy as np
 
 from torch.utils.data import Dataset
 
+'''
+def worker_init_fn(worker_id):
+    torch_seed = torch.initial_seed()
+    random.seed(torch_seed + worker_id)
+    if torch_seed >= 2**30:  # make sure torch_seed + workder_id < 2**32
+        torch_seed = torch_seed % 2**30
+    np.random.seed(torch_seed + worker_id)
+'''
 
 def loadWAV(filename, max_frames, evalmode=True, num_eval=10):
     max_audio = max_frames * 160 + 240
@@ -112,6 +121,8 @@ class load_trainset(Dataset):
             self.audio_list.append(wav_path)
             self.label_list.append(label)
         
+        #self.audio_list = self.audio_list[0:2400]
+        #self.label_list = self.label_list[0:2400]
     def __getitem__(self, index):
         audio = self.audio_list[index]
         label = self.label_list[index]
@@ -155,7 +166,11 @@ class load_testset(Dataset):
             self.audio_1_list.append(audio_1)
             self.audio_2_list.append(audio_2)
             self.ans_list.append(ans)
-            
+        #self.audio_1_list = self.audio_1_list[:100]
+        #self.audio_2_list = self.audio_2_list[:100]
+        #self.ans_list = self.ans_list[:100]
+    def __len__(self):
+        return len(self.audio_1_list)
     def __getitem__(self, index):
         audio_1 = self.audio_1_list[index]
         audio_2 = self.audio_2_list[index]
