@@ -54,7 +54,8 @@ def main():
         batch_size = batch_size,
         shuffle = True,
         #worker_init_fn = worker_init_fn,
-        num_workers= num_workers
+        num_workers= num_workers,
+        drop_last = True 
     )
 
     logger.info('loading test_dataset')
@@ -78,7 +79,7 @@ def main():
     model = ECAPATDNNmodel(config['model_options'])
     optimizer = torch.optim.Adam(model.parameters(), lr = lr, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=eval_interval, gamma=lr_decay)
-    
+    #model.load("/root/project/speaker-verification/results/ecapa_tdnn/1234/save/ECAPA_TDNN_0.pt")
     EERs = []
     if config['device'] == 'cuda':
         model = model.cuda()
@@ -99,3 +100,20 @@ def main():
             scheduler.step()
 if __name__ == "__main__":
     main()
+'''    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-config', type=str, default='config/model.yaml')
+    opt = parser.parse_args()
+
+
+    with open(opt.config) as fin:
+        config = load_hyperpyyaml(fin, overrides=None)
+    model = ECAPATDNNmodel(config['model_options'])
+    model = model.cuda()
+    model.load_parameters("/root/project/speaker-verification/results/ecapa_tdnn/1234/save/ECAPA_TDNN_0.pt")
+    train_log = config['train_log']
+    logger = init_logger(train_log)
+    test_dataset = load_testset(config['dataset_options'])
+    EER, minDCF = validation(model, test_dataset, config, logger)
+    print(EER)
+    print(minDCF)'''

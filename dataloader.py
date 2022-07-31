@@ -151,7 +151,7 @@ class load_trainset(Dataset):
 class load_testset(Dataset):
     def __init__(self, hparams):
 
-        self.test_files = hparams['test_file']
+        self.test_files = hparams['eval_file']
         self.eval_frames = hparams['eval_frames']
 
         lines = open(self.test_files).readlines()
@@ -166,9 +166,9 @@ class load_testset(Dataset):
             self.audio_1_list.append(audio_1)
             self.audio_2_list.append(audio_2)
             self.ans_list.append(ans)
-        #self.audio_1_list = self.audio_1_list[:100]
-        #self.audio_2_list = self.audio_2_list[:100]
-        #self.ans_list = self.ans_list[:100]
+        self.audio_1_list = self.audio_1_list
+        self.audio_2_list = self.audio_2_list
+        self.ans_list = self.ans_list
     def __len__(self):
         return len(self.audio_1_list)
     def __getitem__(self, index):
@@ -186,6 +186,6 @@ class load_testset(Dataset):
             max_frames=self.eval_frames,
             evalmode=True
         )
-        return torch.FloatTensor(data_1), torch.FloatTensor(data_2), ans
+        return torch.FloatTensor(data_1[0]), torch.FloatTensor(data_2[0]), ans
 
 

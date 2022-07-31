@@ -37,7 +37,7 @@ def train(epoch, model, train_dataloader, hparams, logger, optim):
             logger.info(" [%2d] Lr: %5f, Training: %.2f%%, "    %(epoch, lr, 100 * ((num+1) / train_dataloader.__len__())) + \
                 " Loss: %.5f, ACC: %2.2f%% \r"        %(loss/(num+1), top1/index*len(label)))
         
-    return loss/(index+1), lr , top1/(index+1)*len(label)
+    return loss/(num+1), lr , top1/(index+1)*len(label)
 
 def validation(model, test_dataloader, hparams, logger):
     model.eval()
@@ -60,3 +60,19 @@ def validation(model, test_dataloader, hparams, logger):
     fnrs, fprs, thresholds = ComputeErrorRates(scores, labels)
     minDCF, _ = ComputeMinDcf(fnrs, fprs, thresholds, 0.05, 1, 1 )
     return EER, minDCF
+
+def batch_validation(model, test_dataset, hparams):
+    model.eval()
+    scores, labels = [], []
+    device = hparams['device']
+    bpar = tqdm(enumerate(test_dataloader, total=len(test_dataloader)))
+    for index, (audio_1, audio_2, ans) in pbar:
+        if device == 'cuda':
+            audio_1 = audio_1.cuda()
+            audio_2 = audio2.cuda()
+        l
+        embedding_1, embedding_2 = model.eval_step(audio_1, audio_2)
+        score = torch.mean(torch.matmul(embedding_1, embedding_2.T), dim=1)
+        score = score.detach().cpu().numpy()
+        return score
+        
