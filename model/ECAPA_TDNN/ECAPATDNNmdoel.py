@@ -2,7 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from model.ECAPA_TDNN.ECAPA_TDNN import ECAPA_TDNN
+#from model.ECAPA_TDNN.ECAPA_TDNN import ECAPA_TDNN
+#from model.ECAPA_TDNN.ECAPA_TDNN_MULTI import ECAPA_TDNN
+from model.ECAPA_TDNN.MFA_ECAPA_TDNN import ECAPA_TDNN
+
 from model.ECAPA_TDNN.loss import AAMsoftmax
 
 class ECAPATDNNmodel(nn.Module):
@@ -28,7 +31,7 @@ class ECAPATDNNmodel(nn.Module):
             embedding_1 = self.speaker_encoder.forward(features_1, aug=False)
             embedding_1 = F.normalize(embedding_1, p=2, dim=1)
             
-            embedding_2 = self.speaker_encoder(features_2, aug=False)
+            embedding_2 = self.speaker_encoder.forward(features_2, aug=False)
             embedding_2 = F.normalize(embedding_2, p=2, dim=1)
 
         return embedding_1, embedding_2

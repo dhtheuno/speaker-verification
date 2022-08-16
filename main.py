@@ -78,16 +78,26 @@ def main():
     logger.info("Loading model, optimizer and scheudler")
     model = ECAPATDNNmodel(config['model_options'])
     optimizer = torch.optim.Adam(model.parameters(), lr = lr, weight_decay=weight_decay)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=eval_interval, gamma=lr_decay)
+    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=lr_decay)
+    
+    scheduler = torch.optim.lr_scheduler.CyclicLR(
+        optimizer,
+        base_lr = 1e-8,
+        step_size_up = 39000,
+        max_lr = 1e-3,
+        mode = 'triangular2',
+        cycle_momentum=False
+    )
+    
     #model.load("/root/project/speaker-verification/results/ecapa_tdnn/1234/save/ECAPA_TDNN_0.pt")
     EERs = []
     if config['device'] == 'cuda':
         model = model.cuda()
     with logging_redirect_tqdm():
         for epoch in tqdm(range(num_epoch)):
-            loss, lr, acc = train(epoch, model, train_dataloader, config, logger, optimizer)
+            loss, lr, acc = train(epoch, model, train_dataloader, config, logger, optimizer, scheduler)
             logger.info("[Epoch %2d Done]Lr: %5f, Loss: %.5f, ACC: %2.2f%% "%(epoch, lr, loss, acc))
-            if (epoch+1)%1==0:#eval_interval == 0:
+            if (epoch+1)% eval_interval == 0:
                 output_path = os.path.join(config['save_folder'],f"ECAPA_TDNN_{epoch}.pt")
                 model.save_parameters(output_path)
                 logger.info("save model in %s"%(output_path))
@@ -97,8 +107,9 @@ def main():
                 #loss = 0 
                 #acc = 0
                 logger.info("%d epoch, LR %f, LOSS %f, ACC %2.2f%%, EER %2.2f%%, bestEER %2.2f%%"%(epoch, lr, loss, acc, EERs[-1], min(EERs)))        
-            scheduler.step()
+            #scheduler.step()
 if __name__ == "__main__":
+    torch.backends.cudnn.benchmark = True
     main()
 '''    
     parser = argparse.ArgumentParser()
